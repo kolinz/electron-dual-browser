@@ -22,9 +22,9 @@ const manualTitle = document.getElementById('manual-title');
 const manualUrl = document.getElementById('manual-url');
 const btnSaveManual = document.getElementById('btn-save-manual');
 
-// ■初期設定：保存されたURLとブックマークを読み込む
+// ■初期設定
 window.addEventListener('DOMContentLoaded', () => {
-    // 0.5秒待ってから読み込むことで、確実にロードさせる
+    // 0.5秒待ってから読み込む
     setTimeout(() => {
         restoreSession(view1, input1, 'url1');
         restoreSession(view2, input2, 'url2');
@@ -33,28 +33,46 @@ window.addEventListener('DOMContentLoaded', () => {
     renderBookmarks();
 });
 
+// ■URL同期設定（ここを追加：リンク移動時もURLバーを更新する）
+const setupUrlSync = (view, input, storageKey) => {
+    const updateUrl = () => {
+        // 現在表示されている本当のURLを取得
+        const currentUrl = view.getURL();
+        
+        // about:blank などの空ページでなければ更新
+        if (currentUrl && currentUrl !== 'about:blank') {
+            input.value = currentUrl;
+            localStorage.setItem(storageKey, currentUrl);
+        }
+    };
+
+    // ページ移動が完了したタイミングで実行
+    view.addEventListener('did-navigate', updateUrl);
+    // ページ内移動（#リンクなど）でも実行
+    view.addEventListener('did-navigate-in-page', updateUrl);
+};
+
+// 両方の画面に同期設定を適用
+setupUrlSync(view1, input1, 'url1');
+setupUrlSync(view2, input2, 'url2');
+
+
 function restoreSession(view, input, storageKey) {
     let savedUrl = localStorage.getItem(storageKey);
-    
-    // 履歴の自動修復 (https -> http for localhost)
     if (savedUrl && savedUrl.includes('localhost') && savedUrl.startsWith('https://')) {
         savedUrl = savedUrl.replace('https://', 'http://');
     }
-
     if (savedUrl) {
-        // 入力欄にはすぐに表示
         input.value = savedUrl;
-        // 実際に移動処理を行う (srcに入れるだけでなくnavigateを通す)
         navigate(view, input, savedUrl, storageKey);
     }
 }
 
-// ■URL移動関数（プロトコル自動補完付き）
+// ■URL移動関数
 function navigate(webview, input, url, storageKey) {
     url = url.trim();
     if (!url) return;
 
-    // プロトコルがない場合の補完
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
         if (url.startsWith('localhost') || url.startsWith('127.0.0.1')) {
             url = 'http://' + url;
@@ -63,8 +81,9 @@ function navigate(webview, input, url, storageKey) {
         }
     }
     
-    // Webviewにロードさせる
     webview.src = url;
+    // ここではあえてinput.valueを更新しない（did-navigateに任せるか、ロード開始時にセット）
+    // ただし即時反映のため入れておくのはOK
     input.value = url;
     localStorage.setItem(storageKey, url);
 }
@@ -98,8 +117,8 @@ btnSaveManual.addEventListener('click', () => {
 
 btnAddBookmark.addEventListener('click', () => {
     const title = view1.getTitle() || input1.value;
-    const url = input1.value;
-    if(!url) return alert("URLがありません");
+    const url = view1.getURL(); // inputの値より実際のURLを優先
+    if(!url || url === 'about:blank') return alert("URLがありません");
     bookmarks.push({ title, url });
     saveBookmarks();
     renderBookmarks();
