@@ -1,7 +1,7 @@
 {
-  "name": "Dual Metaverse Browser ",
+  "name": "dual-metaverse-browser",
   "version": "1.0.0",
-  "description": "electron-dual-browser",
+  "description": "Dual Metaverse Browser",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
