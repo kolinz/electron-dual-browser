@@ -7,195 +7,146 @@
   <style>
     /* ■ 全体のレイアウト設定 */
     body {
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-      font-family: "Segoe UI", sans-serif;
-      background-color: #222; /* 背景色：ダークグレー */
+      margin: 0; padding: 0; display: flex; flex-direction: column;
+      height: 100vh; overflow: hidden; font-family: "Segoe UI", sans-serif;
+      background-color: #222;
     }
 
-    /* ■ 上部操作バーのデザイン */
+    /* ■ 上部操作バー */
     .controls {
-      display: flex;
-      background: #333;
-      color: white;
-      padding: 8px;
-      height: 40px; /* バーの高さ */
-      align-items: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      z-index: 10;
+      display: flex; background: #333; color: white; padding: 8px;
+      height: 40px; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      z-index: 10; position: relative;
     }
 
-    .control-group {
-      flex: 1;
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      padding: 0 5px;
-    }
+    .control-group { flex: 1; display: flex; gap: 8px; align-items: center; padding: 0 5px; }
 
-    /* URL入力欄 */
     input[type="text"] {
-      flex-grow: 1;
-      padding: 6px 10px;
-      border-radius: 4px;
-      border: 1px solid #555;
-      background-color: #1a1a1a;
-      color: white;
-      outline: none;
-      font-size: 14px;
+      flex-grow: 1; padding: 6px 10px; border-radius: 4px;
+      border: 1px solid #555; background-color: #1a1a1a; color: white;
+      outline: none; font-size: 14px;
     }
-    input[type="text"]:focus {
-      border-color: #888;
-      background-color: #000;
-    }
+    input[type="text"]:focus { border-color: #888; background-color: #000; }
 
-    /* ボタン共通 */
     button {
-      cursor: pointer;
-      padding: 6px 12px;
-      background: #444;
-      color: #eee;
-      border: 1px solid #555;
-      border-radius: 4px;
-      transition: background 0.2s;
-      font-size: 16px; /* 絵文字アイコンのサイズ */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
+      cursor: pointer; padding: 6px 12px; background: #444; color: #eee;
+      border: 1px solid #555; border-radius: 4px; transition: background 0.2s;
+      font-size: 16px; display: flex; align-items: center; justify-content: center;
+      min-width: 40px;
     }
-    button:hover {
-      background: #666;
-    }
+    button:hover { background: #666; }
+    button.muted { background: #d9534f; border-color: #d43f3a; color: white; }
     
-    /* ミュート時の赤色ボタンスタイル */
-    button.muted {
-      background: #d9534f;
-      border-color: #d43f3a;
-      color: white;
-    }
+    /* ブックマークボタン */
+    #btn-bookmark-toggle { background: #f0ad4e; border-color: #eea236; color: #fff; }
+    #btn-bookmark-toggle:hover { background: #ec971f; }
 
-    /* ■ メインエリア（左右分割） */
-    #container {
-      display: flex;
-      flex: 1;
-      height: calc(100vh - 56px); /* ツールバー分を引く */
-      position: relative;
+    /* ■ ブックマークメニュー（ポップアップ） */
+    #bookmark-menu {
+      position: absolute; top: 50px; left: 10px; width: 350px;
+      background: #2a2a2a; border: 1px solid #444; border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 200;
+      display: none; /* 初期状態は非表示 */
+      flex-direction: column; padding: 10px;
     }
+    #bookmark-menu.show { display: flex; }
 
-    .browser-pane {
-      flex: 1; /* 初期状態は50:50 */
-      display: flex;
-      flex-direction: column;
-      min-width: 300px; /* 最小幅制限 */
-      position: relative;
-      background: #000;
+    .bookmark-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: #ddd; font-weight: bold; }
+    
+    /* 手動入力エリア */
+    #manual-input-area {
+      display: none; /* 初期は非表示 */
+      flex-direction: column; gap: 8px; margin-bottom: 10px; 
+      padding-bottom: 10px; border-bottom: 1px solid #444;
+      background: #333; padding: 10px; border-radius: 4px;
     }
+    #manual-input-area.show { display: flex; }
+    
+    .manual-input { width: 100%; box-sizing: border-box; font-size: 13px; }
+    #btn-save-manual { background: #5cb85c; border-color: #4cae4c; width: 100%; margin-top: 5px; }
 
-    /* webviewタグ（ブラウザ本体） */
-    webview {
-      flex: 1;
-      width: 100%;
-      height: 100%;
-      display: inline-flex;
+    .bookmark-list { max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+    
+    .bookmark-item {
+      display: flex; flex-direction: column; background: #333;
+      padding: 8px; border-radius: 4px; border: 1px solid #444;
     }
+    .bookmark-title { font-size: 14px; color: white; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bookmark-actions { display: flex; gap: 5px; }
+    .bookmark-actions button { flex: 1; font-size: 12px; padding: 4px; }
+    .btn-open-left { background: #5bc0de; border-color: #46b8da; }
+    .btn-open-right { background: #5cb85c; border-color: #4cae4c; }
+    .btn-delete { background: #d9534f; border-color: #d43f3a; flex: 0 0 30px; }
 
-    /* ■ 中央のリサイズバー */
-    #resizer {
-      width: 10px;
-      background: #2a2a2a;
-      cursor: col-resize;
-      z-index: 100;
-      border-left: 1px solid #444;
-      border-right: 1px solid #444;
-      transition: background 0.2s;
-    }
-    #resizer:hover {
-      background: #536dfe; /* ホバー時に青く光る */
-    }
+    /* ■ メインエリア */
+    #container { display: flex; flex: 1; height: calc(100vh - 56px); position: relative; }
+    .browser-pane { flex: 1; display: flex; flex-direction: column; min-width: 300px; position: relative; background: #000; }
+    webview { flex: 1; width: 100%; height: 100%; display: inline-flex; }
 
-    /* ■ 読み込み中インジケーター */
+    /* リサイズバー */
+    #resizer { width: 10px; background: #2a2a2a; cursor: col-resize; z-index: 100; border-left: 1px solid #444; border-right: 1px solid #444; transition: background 0.2s; }
+    #resizer:hover { background: #536dfe; }
+
+    /* 読み込み中表示 */
     .loading-overlay {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.7);
-      color: white;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      pointer-events: none; /* マウス操作を邪魔しない */
-      opacity: 0;
-      transition: opacity 0.3s;
-      z-index: 50;
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7); color: white; display: flex; flex-direction: column;
+      justify-content: center; align-items: center; pointer-events: none; opacity: 0; transition: opacity 0.3s; z-index: 50;
     }
-    .loading-overlay.show {
-      opacity: 1;
-    }
-    .spinner {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #3498db;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      animation: spin 1s linear infinite;
-      margin-bottom: 10px;
-    }
+    .loading-overlay.show { opacity: 1; }
+    .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin-bottom: 10px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
   </style>
 </head>
 <body>
 
   <div class="controls">
-    
     <div class="control-group">
+      <button id="btn-bookmark-toggle" title="ブックマーク">★</button>
       <button id="btn-reload-1" title="再読み込み">🔄</button>
       <button id="btn-mute-1" title="ミュート切替">🔊</button>
-      <input type="text" id="url-input-1" placeholder="左画面のURLを入力..." />
+      <input type="text" id="url-input-1" placeholder="左画面のURL..." />
     </div>
     
     <div style="width: 10px; text-align: center; color:#666;">||</div>
 
     <div class="control-group">
-      <input type="text" id="url-input-2" placeholder="右画面のURLを入力..." />
+      <input type="text" id="url-input-2" placeholder="右画面のURL..." />
       <button id="btn-mute-2" title="ミュート切替">🔊</button>
       <button id="btn-reload-2" title="再読み込み">🔄</button>
     </div>
   </div>
 
-  <div id="container">
-    
-    <div class="browser-pane" id="pane-1">
-      <div class="loading-overlay" id="loading-1">
-        <div class="spinner"></div>
-        <div>Loading...</div>
+  <div id="bookmark-menu">
+    <div class="bookmark-header">
+      <span>ブックマーク</span>
+      <div style="display:flex; gap:5px;">
+        <button id="btn-show-manual" style="font-size:14px; width:30px; padding:4px;" title="手動入力">✎</button>
+        <button id="btn-add-bookmark" style="font-size:12px; width:auto; padding:4px 8px;">＋ 現在のURL</button>
       </div>
-      <webview 
-        id="view1" 
-        src="about:blank" 
-        partition="persist:view1" 
-        allowpopups
+    </div>
+
+    <div id="manual-input-area">
+      <input type="text" id="manual-title" class="manual-input" placeholder="タイトルを入力">
+      <input type="text" id="manual-url" class="manual-input" placeholder="URLを入力 (http://...)">
+      <button id="btn-save-manual">追加する</button>
+    </div>
+
+    <div id="bookmark-list" class="bookmark-list">
+      </div>
+  </div>
+
+  <div id="container">
+    <div class="browser-pane" id="pane-1">
+      <div class="loading-overlay" id="loading-1"><div class="spinner"></div><div>Loading...</div></div>
+      <webview id="view1" src="about:blank" partition="persist:view1" allowpopups
         useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36">
       </webview>
     </div>
-
     <div id="resizer"></div>
-
     <div class="browser-pane" id="pane-2">
-      <div class="loading-overlay" id="loading-2">
-        <div class="spinner"></div>
-        <div>Loading...</div>
-      </div>
-      <webview 
-        id="view2" 
-        src="about:blank" 
-        partition="persist:view2" 
-        allowpopups
+      <div class="loading-overlay" id="loading-2"><div class="spinner"></div><div>Loading...</div></div>
+      <webview id="view2" src="about:blank" partition="persist:view2" allowpopups
         useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36">
       </webview>
     </div>
