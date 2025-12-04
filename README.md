@@ -18,6 +18,7 @@
 #### リポジトリのクローン
 ```
 git clone https://github.com/kolinz/electron-dual-browser.git
+cd electron-dual-browser
 ```
 #### 依存関係のインストール
 ```
