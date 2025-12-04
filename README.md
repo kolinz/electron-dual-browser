@@ -17,7 +17,7 @@
 
 #### リポジトリのクローン
 ```
-git clone [https://github.com/あなたのユーザー名/リポジトリ名.git](https://github.com/あなたのユーザー名/リポジトリ名.git)
+git clone https://github.com/kolinz/electron-dual-browser.git
 ```
 #### 依存関係のインストール
 ```
