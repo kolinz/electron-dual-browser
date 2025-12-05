@@ -1,18 +1,19 @@
-const { app, BrowserWindow, session, dialog, shell, Menu, clipboard } = require('electron'); // ■修正: clipboard を追加
+const { app, BrowserWindow, session, dialog, shell, Menu, clipboard } = require('electron');
 const https = require('https');
 const path = require('path');
 
-// ■■■ 設定エリア ■■■
-const UPDATE_CHECK_URL = 'https://gist.githubusercontent.com/あなたのID/ランダム文字列/raw/version.json';
-
-// Googleログイン用の偽装設定
-const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+// 環境変数の読み込み
+require('dotenv').config();
+const USER_AGENT = process.env.USER_AGENT;
 
 // アプリの動作設定
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 app.commandLine.appendSwitch('disable-background-timer-throttling');
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 app.commandLine.appendSwitch('ignore-certificate-errors');
+
+// WebRTC（音声通話）の接続を安定させるための設定を追加
+app.commandLine.appendSwitch('enable-features', 'WebRTCPipeWireCapturer');
 
 let mainWindow;
 
@@ -35,13 +36,31 @@ function createWindow() {
     // 1. UserAgent設定
     webContents.setUserAgent(USER_AGENT);
     
-    // 2. 権限許可
+    // 2. 権限許可（リクエストが来たとき）
     webContents.session.setPermissionRequestHandler((webContents, permission, callback) => {
       const allowedPermissions = ['media', 'audioCapture', 'videoCapture', 'notifications', 'clipboard-read'];
       callback(allowedPermissions.includes(permission));
     });
 
-    // 3. ポップアップ許可
+    // 3. 【追加】権限確認（状態確認が来たとき）
+    // 最近のWebRTCはここもチェックすることがあります
+    webContents.session.setPermissionCheckHandler((webContents, permission, origin) => {
+      const allowedPermissions = ['media', 'audioCapture', 'videoCapture', 'notifications', 'clipboard-read'];
+      return allowedPermissions.includes(permission);
+    });
+
+    // 4. 【追加】デバイス選択の自動化（ここがエラー解決のキモ）
+    // 「どのマイクを使いますか？」と聞かれたら、自動で「最初のデバイス」を選択して返します
+    webContents.on('select-media', (event, requests, callback) => {
+      const item = requests.find(item => item.kind === 'audioInput') || requests[0];
+      if (item) {
+        callback(item);
+      } else {
+        callback(null);
+      }
+    });
+
+    // 5. ポップアップ許可
     webContents.setWindowOpenHandler((details) => {
       return { 
         action: 'allow',
@@ -51,36 +70,30 @@ function createWindow() {
       };
     });
 
-    // 4. 【修正】右クリックメニュー（リンク対応版）
+    // 6. 右クリックメニュー
     webContents.on('context-menu', (event, params) => {
       const menuTemplate = [];
 
-      // ■もしリンクの上で右クリックされたら、URLコピー機能を追加
       if (params.linkURL && params.linkURL.length > 0) {
         menuTemplate.push({
           label: 'リンクのアドレスをコピー',
-          click: () => {
-            clipboard.writeText(params.linkURL); // クリップボードにURLを書き込む
-          }
+          click: () => { clipboard.writeText(params.linkURL); }
         });
-        menuTemplate.push({ type: 'separator' }); // 区切り線
+        menuTemplate.push({ type: 'separator' });
       }
 
-      // 既存のメニュー項目（元に戻す、コピー、貼り付けなど）
       menuTemplate.push(
         { role: 'undo', label: '元に戻す' },
         { role: 'redo', label: 'やり直す' },
         { type: 'separator' },
         { role: 'cut', label: '切り取り' },
-        { role: 'copy', label: 'コピー' }, // これはテキスト選択時のコピー用
+        { role: 'copy', label: 'コピー' },
         { role: 'paste', label: '貼り付け' },
         { role: 'selectAll', label: 'すべて選択' },
         { type: 'separator' },
         {
           label: '検証 (Inspect)',
-          click: () => {
-            webContents.inspectElement(params.x, params.y);
-          }
+          click: () => { webContents.inspectElement(params.x, params.y); }
         }
       );
       
@@ -91,48 +104,11 @@ function createWindow() {
   });
 }
 
-// ■■■ キルスイッチ ■■■
-function checkUpdate() {
-  // if (!app.isPackaged) return;
 
-  https.get(UPDATE_CHECK_URL, (res) => {
-    let body = '';
-    res.on('data', (chunk) => body += chunk);
-    res.on('end', () => {
-      try {
-        const remoteInfo = JSON.parse(body);
-        const currentVersion = app.getVersion();
-
-        console.log(`Current: ${currentVersion}, Remote Min: ${remoteInfo.minVersion}`);
-
-        if (remoteInfo.minVersion > currentVersion) {
-            const choice = dialog.showMessageBoxSync({
-            type: 'error',
-            buttons: ['ダウンロードページへ', '終了'],
-            defaultId: 0,
-            title: 'アップデートが必要です',
-            message: `このバージョン (${currentVersion}) は利用できません。`,
-            detail: `最新版 (${remoteInfo.minVersion}) をダウンロードしてください。`
-          });
-
-          if (choice === 0) {
-            shell.openExternal(remoteInfo.downloadUrl);
-          }
-          app.quit();
-        }
-      } catch (e) {
-        console.error('バージョンチェック失敗（無視して続行）:', e);
-      }
-    });
-  }).on('error', (err) => {
-    console.error('ネットワークエラー（無視して続行）');
-  });
-}
 
 // アプリ起動時の処理
 app.whenReady().then(() => {
   createWindow();
-  checkUpdate();
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
