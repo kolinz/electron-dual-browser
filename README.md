@@ -29,12 +29,4 @@ npm install
 ```
 npm start
 ```
-#### ビルド（exeファイルの作成）
-```
-npm run build
-```
-#### .exeファイルの在りか
-ビルド後、distディレクトリ下に、dual-metaverse-browser Setup 1.0.0.exe ができています。
 
-#### Windowsにインストール
-dual-metaverse-browser Setup 1.0.0.exe をダブルクリックして、Dual Metaverse Browser をインストールします。インストール後、自動起動します。
