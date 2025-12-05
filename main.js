@@ -24,7 +24,8 @@ function createWindow() {
     webPreferences: {
       webviewTag: true,
       nodeIntegration: true,
-      contextIsolation: false
+      contextIsolation: false,
+      backgroundThrottling: false
     }
   });
 
@@ -117,4 +118,5 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit();
+
 });
