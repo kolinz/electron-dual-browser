@@ -2,9 +2,13 @@ const { app, BrowserWindow, session, dialog, shell, Menu, clipboard } = require(
 const https = require('https');
 const path = require('path');
 
-// 環境変数の読み込み
-require('dotenv').config();
-const USER_AGENT = process.env.USER_AGENT;
+// ユーザーエージェントの設定
+const USER_AGENT = 
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+  "AppleWebKit/537.36 (KHTML, like Gecko) " +
+  "Chrome/128.0.0.0 " +
+  "Safari/537.36 " +
+  "dual-metaverse-browser/1.0";
 
 // アプリの動作設定
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
@@ -105,8 +109,6 @@ function createWindow() {
   });
 }
 
-
-
 // アプリ起動時の処理
 app.whenReady().then(() => {
   createWindow();
@@ -120,3 +122,4 @@ app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit();
 
 });
+
