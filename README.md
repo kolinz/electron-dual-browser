@@ -39,6 +39,6 @@ npm rum build
 ```
 dist ディレクトリが作成される。
 ### ビルド結果のインストールと起動
-1. dist ディレクトリ下に作成されている、「dual-metaverse-browser Setup x.x.x.exe」をダブルクリックして起動。インストールを行う。
-2. Windows11のスタートメニューで、「dual-metaverse-browser」を起動する。
+1. dist ディレクトリ下に作成されている、「Dual-Metaverse-Browser Setup x.x.x.exe」をダブルクリックして起動。インストールを行う。
+2. Windows11のスタートメニューで、「Dual-Metaverse-Browser」を起動する。
 
