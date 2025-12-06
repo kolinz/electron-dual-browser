@@ -31,4 +31,14 @@ npm install
 ```
 npm start
 ```
+### ビルド
+Windows 11 の環境で、管理者権限で「[ターミナル](https://learn.microsoft.com/ja-jp/windows/terminal/)」を起動。
+管理者権限で起動後、コマンドを実行
+```
+npm rum build
+```
+dist ディレクトリが作成される。
+### ビルド結果のインストールと起動
+1. dist ディレクトリ下に作成されている、「dual-metaverse-browser Setup x.x.x.exe」をダブルクリックして起動。インストールを行う。
+2. Windows11のスタートメニューで、「dual-metaverse-browser」を起動する。
 
