@@ -1,5 +1,5 @@
 {
-  "name": "dual-metaverse-browser",
+  "name": "Dual-Metaverse-Browser",
   "version": "1.0.0",
   "description": "Dual Metaverse Browser",
   "main": "main.js",
@@ -22,4 +22,5 @@
     "electron-builder": "^25.1.8"
   }
 }
+
 
